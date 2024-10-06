@@ -10,11 +10,12 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float maxSpeed = 25;
     [SerializeField] private float moveForce = 30;
     [SerializeField] private float jumpForce = 700;
-    private float direction;
+    private float xAxis;
     private float hForce = 1;
     private bool isGrounded = false;
     private bool isJump = false;
     private bool isSpinDash = false;
+    //private bool isPress;
 
     void Start()
     {
@@ -25,7 +26,9 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         isGrounded = Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground"));
-        direction = Input.GetAxis("Horizontal");
+        //isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.2f, mask);
+        //isGrounded=Physics2D.Raycast(transform.position, Vector2.down, 1f, 1 << LayerMask.NameToLayer("Ground"));
+        xAxis = Input.GetAxis("Horizontal");
 
         anim.SetBool("OnGround", isGrounded);
 
@@ -44,12 +47,17 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        /*if(isSpinDash){
-            hForce-=0.01f;
-            rigidbody2d.linearVelocityX
-        }*/
+        if (isSpinDash)
+        {
+            hForce -= 0.01f;
+            if (rigidbody2d.linearVelocityX < 1)
+            {
+                hForce = 1;
+                isSpinDash = false;
+            }
+        }
     }
-
+   
     private void FixedUpdate()
     {
         Running();
@@ -58,22 +66,21 @@ public class PlayerMovement : MonoBehaviour
         {
             Jump();
         }
-
     }
 
     private void Running()
     {
         anim.SetFloat("Speed", Math.Abs(rigidbody2d.linearVelocityX));
 
-        rigidbody2d.AddForce(new Vector2(direction * hForce * moveForce, 0));
+        rigidbody2d.AddForce(new Vector2(xAxis * hForce * moveForce, 0));
 
-        if (direction < 0f)
+        if (xAxis < 0f)
             gameObject.GetComponent<SpriteRenderer>().flipX = false;
 
-        if (direction > 0f)
+        if (xAxis > 0f)
             gameObject.GetComponent<SpriteRenderer>().flipX = true;
 
-        if (rigidbody2d.linearVelocityX > maxSpeed)
+        if (Math.Abs(rigidbody2d.linearVelocityX) > maxSpeed)
         {
             rigidbody2d.linearVelocity = new Vector2(Math.Sign(rigidbody2d.linearVelocityX) * maxSpeed, rigidbody2d.linearVelocityY);
         }
